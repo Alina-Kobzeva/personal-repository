@@ -38,7 +38,7 @@ int main() {
 
    if (num_of_func < 0 || num_of_func > 4) {
       printf("Error: there is no such function\n");
-      return 1;
+      return 0;
    }
 
    int sentence_count = 0;
