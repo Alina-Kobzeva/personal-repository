@@ -55,7 +55,7 @@ int main() {
 
    switch(num_of_func) {
 
-      case '0':
+      case 0:
          for(int i = 0; i < sentence_count; i++) {
             if(all_text[i] != NULL) {
                printf("%s\n", all_text[i]);
