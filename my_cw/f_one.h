@@ -1,0 +1,1 @@
+void convert_seconds_to_time(char** text, int sentence_count);

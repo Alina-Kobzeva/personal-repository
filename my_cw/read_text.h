@@ -1,0 +1,1 @@
+char** read_text(int *sentence_count);

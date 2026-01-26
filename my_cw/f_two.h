@@ -1,0 +1,1 @@
+void remove_first_word(char** text, int sentence_count);

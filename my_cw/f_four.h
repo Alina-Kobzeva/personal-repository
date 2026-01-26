@@ -1,0 +1,1 @@
+void bubble_sort_lowercase(char** text, int sentence_count);
