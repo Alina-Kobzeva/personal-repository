@@ -1,0 +1,1 @@
+void remove_same_length(char** text, int sentence_count);
