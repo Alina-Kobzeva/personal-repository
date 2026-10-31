@@ -1,4 +1,5 @@
 #include "Factory.h"
+#include "Constants.h"
 
 Factory::Factory(int startX, int startY, int interval)
     : x(startX), y(startY), spawnEnemyInterval(interval), turnsPassed(0) {}
@@ -23,6 +24,9 @@ bool Factory::readyToSpawn() {
 }
 
 PlacedRobot Factory::newEnemy(int enemyNum) {
-    Robot* newRobot = new Robot("Боевой робот-враг-" + std::to_string(enemyNum), 40, 25, 20, 2, 1, true);
-    return PlacedRobot(*newRobot, x, y + 2);
+    Robot* newRobot = new Robot("Боевой робот-враг-" + std::to_string(enemyNum),
+    Constants::ENEMY_MAX_HP, Constants::NEW_ENEMY_MAX_ENERGY,
+    Constants::NEW_ENEMY_ATTACK, Constants::ENEMY_SPEED,
+    Constants::ENEMY_VISION, true);
+    return PlacedRobot(*newRobot, x, y + Constants::FACTORY_SIZE);
 }

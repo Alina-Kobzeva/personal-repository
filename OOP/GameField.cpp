@@ -1,10 +1,11 @@
 #include "GameField.h"
+#include "Constants.h"
 
 GameField::GameField(int fieldWidth, int fieldHeight) {
-    if (fieldWidth < 5) fieldWidth = 5;
-    if (fieldWidth > 30) fieldWidth = 30;
-    if (fieldHeight < 5) fieldHeight = 5;
-    if (fieldHeight > 30) fieldHeight = 30;
+    if (fieldWidth < Constants::MIN_FIELD_SIZE) fieldWidth = Constants::MIN_FIELD_SIZE;
+    if (fieldWidth > Constants::MAX_FIELD_SIZE) fieldWidth = Constants::MAX_FIELD_SIZE;
+    if (fieldHeight < Constants::MIN_FIELD_SIZE) fieldHeight = Constants::MIN_FIELD_SIZE;
+    if (fieldHeight > Constants::MAX_FIELD_SIZE) fieldHeight = Constants::MAX_FIELD_SIZE;
 
     width = fieldWidth;
     height = fieldHeight;

@@ -1,6 +1,7 @@
 #include "Cell.h"
+#include "Constants.h"
 
-Cell::Cell() : isWalkable(true), movementCost(1), isDiscovered(false) {}
+Cell::Cell() : isWalkable(true), movementCost(Constants::COST_NORMAL_TERRAIN), isDiscovered(false) {}
 
 Cell::Cell(bool walkable, int movCost) : isWalkable(walkable), movementCost(movCost), isDiscovered(false) {}
 

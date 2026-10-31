@@ -1,16 +1,25 @@
 #include "GameController.h"
+#include "Constants.h"
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
 
-static Robot realPlayer("Маленький робот", 100, 50, 20, 3, 1, false);
-static Robot realEnemy1("Робот-враг-1", 40, 20, 15, 2, 1, true);
-static Robot realEnemy2("Робот-враг-2", 40, 20, 15, 2, 1, true);
+static Robot realPlayer(Constants::PLAYER_NAME, Constants::PLAYER_MAX_HP, Constants::PLAYER_MAX_ENERGY,
+        Constants::PLAYER_ATTACK, Constants::PLAYER_SPEED, Constants::PLAYER_VISION, false);
+
+static Robot realEnemy1("Робот-враг-1", Constants::ENEMY_MAX_HP, Constants::ENEMY_MAX_ENERGY,
+        Constants::ENEMY_ATTACK, Constants::ENEMY_SPEED, Constants::ENEMY_VISION, true);
+
+static Robot realEnemy2("Робот-враг-2", Constants::ENEMY_MAX_HP, Constants::ENEMY_MAX_ENERGY,
+        Constants::ENEMY_ATTACK, Constants::ENEMY_SPEED, Constants::ENEMY_VISION, true);
+
 
 GameController::GameController()
     : player(realPlayer, 1, 1), drawing(), 
-      field(16, 9), factory(7, 4, 5), spawnedCount(0)
+      field(Constants::DEFAULT_FIELD_WIDTH, Constants::DEFAULT_FIELD_HEIGHT), 
+      factory(Constants::FACTORY_X, Constants::FACTORY_Y, Constants::FACTORY_SPAWN_INTERVAL), 
+      spawnedCount(0)
 {
     enemies.push_back(PlacedRobot(realEnemy1, 7, 3));
     enemies.push_back(PlacedRobot(realEnemy2, 9, 8));
@@ -23,14 +32,14 @@ GameController::GameController()
     field.getCell(4, 3).setIsWalkable(false);
 
 
-    field.getCell(3, 7).setMovementCost(2);
-    field.getCell(4, 7).setMovementCost(2);
-    field.getCell(5, 7).setMovementCost(2);
-    field.getCell(4, 8).setMovementCost(2);
+    field.getCell(3, 7).setMovementCost(Constants::COST_HEAVY_TERRAIN);
+    field.getCell(4, 7).setMovementCost(Constants::COST_HEAVY_TERRAIN);
+    field.getCell(5, 7).setMovementCost(Constants::COST_HEAVY_TERRAIN);
+    field.getCell(4, 8).setMovementCost(Constants::COST_HEAVY_TERRAIN);
 
-    field.getCell(12, 6).setMovementCost(2);
-    field.getCell(13, 6).setMovementCost(2);
-    field.getCell(13, 7).setMovementCost(2);
+    field.getCell(12, 6).setMovementCost(Constants::COST_HEAVY_TERRAIN);
+    field.getCell(13, 6).setMovementCost(Constants::COST_HEAVY_TERRAIN);
+    field.getCell(13, 7).setMovementCost(Constants::COST_HEAVY_TERRAIN);
 
     openFogOfWar();
 }
@@ -72,7 +81,7 @@ void GameController::movePlayer(int movX, int movY) {
         for (auto& enemy : enemies) {
             if (enemy.getX() == nextX && enemy.getY() == nextY && enemy.getRobot().getHealth() > 0) {
                 player.getRobot().interact(enemy.getRobot());
-                player.getRobot().spendEnergy(2);
+                player.getRobot().spendEnergy(Constants::ENERGY_COMBAT_COST);
                 hitEnemy = true;
                 break;
             }
@@ -150,7 +159,7 @@ void GameController::run() {
             }
         }
         if (!anyEnemyAlive) {
-            std::cout << "Победа! Все враги повержены!!!";
+            std::cout << "Победа! Все враги повержены!!!\n";
             break;
         }
 
@@ -174,9 +183,9 @@ void GameController::run() {
             enemies.push_back(factory.newEnemy(spawnedCount));
         }
 
-        player.getRobot().restoreEnergy(0);
+        player.getRobot().restoreEnergy(Constants::ENERGY_REGEN_PLAYER);
         for (auto& enemy : enemies) {
-            enemy.getRobot().restoreEnergy(0);
+            enemy.getRobot().restoreEnergy(Constants::ENERGY_REGEN_ENEMY);
         }
     }
     if (player.getRobot().getHealth() <= 0) {
