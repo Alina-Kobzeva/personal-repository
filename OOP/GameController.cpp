@@ -58,45 +58,37 @@ void GameController::openFogOfWar() {
     }
 }
 
-void GameController::movePlayer(int movX, int movY) {
-    int stepX = (movX > 0) ? 1 : ((movX < 0) ? -1 : 0);
-    int stepY = (movY > 0) ? 1 : ((movY < 0) ? -1 : 0);
-
-    int totalSteps = std::max(std::abs(movX), std::abs(movY));
-
-    for (int i = 0; i < totalSteps; ++i) {
-        int nextX = player.getX() + stepX;
-        int nextY = player.getY() + stepY;
+void GameController::movePlayer(int stepX, int stepY) {
+    int nextX = player.getX() + stepX;
+    int nextY = player.getY() + stepY;
         
-        if (nextX >= field.getWidth() || nextX < 0 || nextY >= field.getHeight() || nextY < 0) break;
+    if (nextX >= field.getWidth() || nextX < 0 || nextY >= field.getHeight() || nextY < 0) return;
 
-        if (!field.getCell(nextX, nextY).getIsWalkable()) break;
+    if (!field.getCell(nextX, nextY).getIsWalkable()) return;
 
-        int cost = field.getCell(nextX, nextY).getMovementCost();
-        if (player.getRobot().getCurrentMovePoints() < cost) break;
+    int cost = field.getCell(nextX, nextY).getMovementCost();
+    if (player.getRobot().getCurrentMovePoints() < cost) return;
+    if (player.getRobot().getEnergy() < cost) return;
 
-        if (player.getRobot().getEnergy() < cost) break;
-
-        bool hitEnemy = false;
-        for (auto& enemy : enemies) {
-            if (enemy.getX() == nextX && enemy.getY() == nextY && enemy.getRobot().getHealth() > 0) {
-                player.getRobot().interact(enemy.getRobot());
-                player.getRobot().spendEnergy(Constants::ENERGY_COMBAT_COST);
-                hitEnemy = true;
-                break;
-            }
+    bool hitEnemy = false;
+    for (auto& enemy : enemies) {
+        if (enemy.getX() == nextX && enemy.getY() == nextY && enemy.getRobot().getHealth() > 0) {
+            player.getRobot().interact(enemy.getRobot());
+            player.getRobot().spendEnergy(Constants::ENERGY_COMBAT_COST);
+            hitEnemy = true;
+            break;
         }
-
-        if (hitEnemy) break;
-
-        player.setX(nextX);
-        player.setY(nextY);
-
-        player.getRobot().spendEnergy(cost);
-        player.getRobot().spendMovePoints(cost);
-
-        openFogOfWar();
     }
+
+    if (hitEnemy) return;
+
+    player.setX(nextX);
+    player.setY(nextY);
+
+    player.getRobot().spendEnergy(cost);
+    player.getRobot().spendMovePoints(cost);
+
+    openFogOfWar();
 }
 
 // Движение врага по направлению к игроку
@@ -149,33 +141,43 @@ void GameController::run() {
         for (auto& enemy : enemies) {
             enemy.getRobot().resetMovePoints();
         }
+        while (player.getRobot().getCurrentMovePoints() > 0 && player.getRobot().getHealth() > 0) {
+            drawing.mDrawing(field, player, enemies, factory);
+        
 
-        drawing.mDrawing(field, player, enemies, factory);
-
-        bool anyEnemyAlive = false;
-        for (const auto& enemy : enemies) {
-            if (enemy.getRobot().getHealth() > 0) {
-                anyEnemyAlive = true;
+            bool anyEnemyAlive = false;
+            for (const auto& enemy : enemies) {
+                if (enemy.getRobot().getHealth() > 0) {
+                    anyEnemyAlive = true;
+                }
             }
-        }
-        if (!anyEnemyAlive) {
-            std::cout << "Победа! Все враги повержены!!!\n";
-            break;
-        }
+            if (!anyEnemyAlive) {
+                std::cout << "Победа! Все враги повержены!!!\n";
+                return;
+            }
 
         // Ввод/управление
-        std::cout << "Управление роботом:\nW (вверх)    S (вниз)\nA (влево)    D (вправо)\n";
-        std::cout << "Чтобы выйти из игры нажмите 'Q'\n";
-        std::cout << "Ваш ход: ";
-        std::cin >> input;
+            std::cout << "Ваш ход. Осталось очков хода: "
+                      << player.getRobot().getCurrentMovePoints() << "\n";
+            std::cout << "Управление роботом:\nW (вверх)    S (вниз)\nA (влево)    D (вправо)\n";
+            std::cout << "Чтобы завершить ходы досрочно нажмите 'E'\nЧтобы выйти из игры нажмите 'Q'\n";
+            std::cout << "Ваш ход: ";
+            std::cin >> input;
 
-        int currentSpeed = player.getRobot().getSpeed();
+            if (input == 'q' || input == 'Q') return;
 
-        if (input == 'w' || input == 'W') movePlayer(0, -currentSpeed);
-        else if (input == 's' || input == 'S') movePlayer(0, currentSpeed);
-        else if (input == 'a' || input == 'A') movePlayer(-currentSpeed, 0);
-        else if (input == 'd' || input == 'D') movePlayer(currentSpeed, 0);
-        else continue;
+            if (input == 'w' || input == 'W') movePlayer(0, -1);
+            else if (input == 's' || input == 'S') movePlayer(0, 1);
+            else if (input == 'a' || input == 'A') movePlayer(-1, 0);
+            else if (input == 'd' || input == 'D') movePlayer(1, 0);
+            else if (input == 'e' || input == 'E') {
+                //  std::cout << "Вы досрочно завершили ход.\n";
+                break;
+            } else continue;
+        }
+
+        if (player.getRobot().getHealth() <= 0) break;
+
         moveEnemies();
 
         if (factory.readyToSpawn()) {
@@ -188,6 +190,7 @@ void GameController::run() {
             enemy.getRobot().restoreEnergy(Constants::ENERGY_REGEN_ENEMY);
         }
     }
+
     if (player.getRobot().getHealth() <= 0) {
         std::cout << "Поражение! Попробуйте ещё раз.\n";
     }
