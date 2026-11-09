@@ -10,7 +10,10 @@ GameField::GameField(int fieldWidth, int fieldHeight) {
     width = fieldWidth;
     height = fieldHeight;
 
-    field = std::vector<std::vector<Cell>>(height, std::vector<Cell>(width, Cell()));
+    field.resize(height);
+    for (int i = 0; i < height; ++i) {
+        field[i].resize(width);
+    }
 }
 
 int GameField::getWidth() const {

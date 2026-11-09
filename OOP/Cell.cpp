@@ -1,5 +1,6 @@
 #include "Cell.h"
 #include "Constants.h"
+#include <cstdlib>
 
 Cell::Cell() : isWalkable(true), movementCost(Constants::COST_NORMAL_TERRAIN), isDiscovered(false) {}
 
@@ -29,4 +30,10 @@ bool Cell::getIsDiscovered() const {
 
 void Cell::setIsDiscovered(bool discovered) {
     isDiscovered = discovered;
+}
+
+void Cell::removeOneRandomStatus() {
+    if (cellStatuses.empty()) return;
+    int indexToRemove = std::rand() % cellStatuses.size();
+    cellStatuses.erase(cellStatuses.begin() + indexToRemove);
 }
