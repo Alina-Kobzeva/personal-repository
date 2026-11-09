@@ -1,5 +1,9 @@
 #pragma once
 #include <string>
+#include <memory>
+#include <vector>
+#include "Ability.h"
+#include "Status.h"
 
 class Robot {
 private:
@@ -23,6 +27,9 @@ private:
     int currentMovePoints;
 
     void checkRankUp();
+
+    std::vector<std::unique_ptr<Ability>> abilities;
+    std::vector<std::unique_ptr<Status>> activeStatuses;
 
 public:
     Robot(std::string robotName, int maxHp, int maxEn, int attack, int robotSpeed, int vision, bool enemy);
@@ -51,4 +58,16 @@ public:
     int getCurrentMovePoints() const;
     void resetMovePoints();
     void spendMovePoints(int amount);
+
+    void tickStatuses();
+
+    std::vector<std::unique_ptr<Ability>>& getAbilities() {
+        return abilities;
+    }
+
+    void addStatus(std::unique_ptr<Status> newStatus);
+
+    const std::vector<std::unique_ptr<Status>>& getActiveStatuses() const {
+        return activeStatuses;
+    }
 };

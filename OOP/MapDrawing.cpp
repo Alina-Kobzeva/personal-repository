@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cmath>
 
-void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player, const std::vector <PlacedRobot>& enemies, const Factory& factory) {
+void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player, const std::vector<std::unique_ptr<PlacedRobot>>& enemies, const Factory& factory) {
     std::system("clear"); 
     const Robot& playerRobot = player.getRobot();
     
@@ -13,10 +13,13 @@ void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player,
     std::cout << "Energy: " << playerRobot.getEnergy() << " / "<< playerRobot.getMaxEnergy() << "\n";
     std::cout << "XP: " << playerRobot.getCurrentXp() << " / "<< playerRobot.getXpToNextRank() << "\n";
 
+    std::cout << "Текущий режим подсветки: [" << getCurrentModeName() << "] (Нажмите V для переключения)\n\n";
+
     for (int y = 0; y < playField.getHeight(); ++y) {
         for (int x = 0; x < playField.getWidth(); ++x) {
+
             if (player.getX() == x && player.getY() == y) {
-                std::cout << "⚀ ";
+                std::cout << Constants::COLOR_PLAYER << "⚀ " << Constants::COLOR_RESET;
                 continue;
             }
 
@@ -25,12 +28,18 @@ void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player,
             int vision = player.getRobot().getVisionRadius();
 
             bool inLiveVision = (distX <= vision && distY <= vision);
+            const Cell& cell = playField.getCell(x, y);
+            bool cellIsVisible = inLiveVision || cell.getIsDiscovered();
 
             bool enemyIsHere = false;
             for (const auto& enemy : enemies) {
-                if (enemy.getX() == x && enemy.getY() == y && enemy.getRobot().getHealth() > 0) {
+                if (enemy->getX() == x && enemy->getY() == y && enemy->getRobot().getHealth() > 0) {
                     if (inLiveVision){
-                        std::cout << "✦ ";
+                        if (currentMode == Constants::RenderMode::Enemies) {
+                            std::cout << Constants::COLOR_ENEMY << "✦ " << Constants::COLOR_RESET;
+                        } else {
+                            std::cout << "✦ ";
+                        }
                         enemyIsHere = true;
                         break;
                     }
@@ -38,8 +47,6 @@ void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player,
             }
             if (enemyIsHere) continue;
 
-
-            const Cell& cell = playField.getCell(x, y);
 
             if ((x == factory.getX() || x == factory.getX() + 1) &&
                  (y == factory.getY() || y == factory.getY() + 1)) {
@@ -52,21 +59,33 @@ void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player,
                 continue;
             }
 
-            if (!cell.getIsDiscovered() && !inLiveVision) {
+            if (!cellIsVisible) {
                 std::cout << ". ";
                 continue;
             }
 
+            std::string appliedColor = Constants::COLOR_RESET;
+
+            if (currentMode == Constants::RenderMode::Walls && !cell.getIsWalkable()) {
+                appliedColor = Constants::COLOR_WALL;
+            }
+            else if (currentMode == Constants::RenderMode::Statuses && cell.hasStatuses()) {
+                appliedColor = Constants::COLOR_STATUS;
+            }
+
+
+            if (!cell.getIsWalkable()) {
+                std::cout << appliedColor << "▲ " << Constants::COLOR_RESET;
+            }
             else {
-                if (!cell.getIsWalkable()) {
-                std::cout << "▲ ";
-                }
-                else {
-                    if (!inLiveVision) {
-                        std::cout << ". ";
+                if (!inLiveVision) {
+                    std::cout << ". ";
+                } else {
+                    if (cell.getMovementCost() > Constants::COST_NORMAL_TERRAIN) {
+                        std::cout << appliedColor << "~ " << Constants::COLOR_RESET;
                     } else {
-                        if (cell.getMovementCost() > Constants::COST_NORMAL_TERRAIN) {
-                            std::cout << "~ ";
+                        if (currentMode == Constants::RenderMode::Statuses && cell.hasStatuses()) {
+                            std::cout << appliedColor << "░░" << Constants::COLOR_RESET;
                         } else {
                             std::cout << "  ";
                         }
@@ -76,4 +95,24 @@ void MapDrawing::mDrawing(const GameField& playField, const PlacedRobot& player,
         }
         std::cout << "\n";
     }
+}
+
+
+void MapDrawing::switchMode() {
+    if (currentMode == Constants::RenderMode::Standard) {
+        currentMode = Constants::RenderMode::Enemies;
+    } else if (currentMode == Constants::RenderMode::Enemies) {
+        currentMode = Constants::RenderMode::Walls;
+    } else if (currentMode == Constants::RenderMode::Walls) {
+        currentMode = Constants::RenderMode::Statuses;
+    } else {
+        currentMode = Constants::RenderMode::Standard;
+    }
+}
+
+std::string MapDrawing::getCurrentModeName() const {
+    if (currentMode == Constants::RenderMode::Standard) return "Стандартный";
+    if (currentMode == Constants::RenderMode::Enemies)  return "Подсветка врагов";
+    if (currentMode == Constants::RenderMode::Walls)    return "Подсветка стен";
+    return "Подсветка клеток с аномалиями";
 }

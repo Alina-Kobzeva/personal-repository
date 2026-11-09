@@ -10,13 +10,18 @@ private:
     MapDrawing drawing;
     GameField field;
     Factory factory;
-    std::vector<PlacedRobot> enemies;
+    std::vector<std::unique_ptr<PlacedRobot>> enemies;
     int spawnedCount;
 
     void openFogOfWar();
     void movePlayer(int moveX, int moveY);
     void moveEnemies();
 
+    void selectStartingAbility();
+    void usePlayerAbility(int idx);
+    void handlePlayerRankUp();
+    int lastPlayerRank;
+    void checkAndProcessPlayerRankUp();
 public:
     GameController();
     void run();

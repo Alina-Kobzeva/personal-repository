@@ -1,6 +1,7 @@
 #pragma once
 #include "GameField.h"
 #include "PlacedRobot.h"
+#include <memory>
 
 class Factory {
 private:
@@ -17,5 +18,5 @@ public:
 
     void blockedCells(GameField& Field);
     bool readyToSpawn();
-    PlacedRobot newEnemy(int enemyNum);
+    std::unique_ptr<PlacedRobot> newEnemy(int enemyNum);
 };

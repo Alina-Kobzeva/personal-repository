@@ -1,4 +1,7 @@
 #include "Robot.h"
+#include "Ability.h"
+#include "Status.h"
+#include <algorithm>
 
 Robot::Robot(std::string robotName, int maxHp, int maxEn, int attack, int robotSpeed, int vision, bool enemy)
     : name(robotName), health(maxHp), maxHealth(maxHp), energy(maxEn), maxEnergy(maxEn), attackPower(attack), currentXp(0),
@@ -21,7 +24,13 @@ bool Robot::getIsEnemy() const { return isEnemy; }
 // Получение урона
 void Robot::takeDamage(int amount) {
     if (amount <= 0) return;
-    health -= amount;
+    
+    int finalDamage = amount;
+    for (auto& status : activeStatuses) {
+        finalDamage = status->modifyIncomingDamage(finalDamage);
+    }
+
+    health -= finalDamage;
     if (health < 0) {
         health = 0;
     }
@@ -103,4 +112,30 @@ void Robot::spendMovePoints(int amount) {
     if (currentMovePoints < 0) {
         currentMovePoints = 0;
     }
+}
+
+void Robot::tickStatuses() {
+    for (auto& status : activeStatuses) {
+        status->update(*this);
+    }
+
+    activeStatuses.erase(
+        std::remove_if(activeStatuses.begin(), activeStatuses.end(),
+            [](const std::unique_ptr<Status>& status) {
+                return status->isExpired();
+            }),
+        activeStatuses.end()
+    );
+}
+
+void Robot::addStatus(std::unique_ptr<Status> newStatus) {
+    if (!newStatus) return;
+
+    for (auto& currentStatus : activeStatuses) {
+        if (currentStatus->getName().substr(0, 4) == newStatus->getName().substr(0, 4)) {
+            currentStatus->merge(*newStatus);
+            return;
+        }
+    }
+    activeStatuses.push_back(std::move(newStatus));
 }
